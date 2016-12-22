@@ -1,9 +1,9 @@
 addpath('./eval/matlab');
 if(~exist('vocab_file')) 
-    vocab_file = 'vocab.txt';
+    vocab_file = '/homes/urialon/glove/models/jsnice_training_clean/vocab.txt';
 end
 if(~exist('vectors_file')) 
-    vectors_file = 'vectors.bin';
+    vectors_file = '/homes/urialon/glove/models/jsnice_training_clean/vectors.txt';
 end
 
 fid = fopen(vocab_file, 'r');

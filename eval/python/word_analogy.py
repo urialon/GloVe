@@ -65,11 +65,11 @@ def distance(W, vocab, ivocab, input_term):
         print("\n                               Word       Cosine distance\n")
         print("---------------------------------------------------------\n")
         for x in a:
-            print("%35s\t\t%f\n" % (ivocab[x], dist[x]))
+            print("%35s\t\t%f" % (ivocab[x], dist[x]))
 
 
 if __name__ == "__main__":
-    N = 100;          # number of closest words that will be shown
+    N = 50;          # number of closest words that will be shown
     W, vocab, ivocab = generate()
     while True:
         input_term = raw_input("\nEnter three words (EXIT to break): ")

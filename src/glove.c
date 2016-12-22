@@ -55,6 +55,8 @@ real alpha = 0.75, x_max = 100.0; // Weighting function parameters, not extremel
 real *W, *gradsq, *cost;
 long long num_lines, *lines_per_thread, vocab_size;
 char *vocab_file, *input_file, *save_W_file, *save_gradsq_file;
+int filter_paths = 0;
+int *appeared_flags;
 
 /* Efficient string comparison */
 int scmp( char *s1, char *s2 ) {
@@ -80,6 +82,14 @@ void initialize_parameters() {
 	for (b = 0; b < vector_size; b++) for (a = 0; a < 2 * vocab_size; a++) W[a * vector_size + b] = (rand() / (real)RAND_MAX - 0.5) / vector_size;
 	for (b = 0; b < vector_size; b++) for (a = 0; a < 2 * vocab_size; a++) gradsq[a * vector_size + b] = 1.0; // So initial value of eta is equal to initial learning rate
 	vector_size--;
+    appeared_flags = malloc(sizeof(int) * (vocab_size));
+    if (appeared_flags == NULL) {
+        fprintf(stderr, "Error allocating memory for appeared_flags\n");
+        exit(1);
+    }
+    for (b = 0; b < vocab_size; b++) {
+        appeared_flags[b] = 0;
+    }
 }
 
 inline real check_nan(real update) {
@@ -108,6 +118,7 @@ void *glove_thread(void *vid) {
         fread(&cr, sizeof(CREC), 1, fin);
         if (feof(fin)) break;
         if (cr.word1 < 1 || cr.word2 < 1) { continue; }
+        appeared_flags[cr.word1-1] = 1;
         
         /* Get location of words in W & gradsq */
         l1 = (cr.word1 - 1LL) * (vector_size + 1); // cr word indices start at 1
@@ -224,6 +235,10 @@ int save_params(int nb_iter) {
             if (fscanf(fid,format,word) == 0) return 1;
             // input vocab cannot contain special <unk> keyword
             if (strcmp(word, "<unk>") == 0) return 1;
+            if (filter_paths && appeared_flags[a] == 0) {
+                if (fscanf(fid,format,word) == 0) return 1;
+                continue;
+            }
             fprintf(fout, "%s",word);
             if (model == 0) { // Save all parameters (including bias)
                 for (b = 0; b < (vector_size + 1); b++) fprintf(fout," %lf", W[a * (vector_size + 1) + b]);
@@ -428,6 +443,7 @@ int main(int argc, char **argv) {
         if ((i = find_arg((char *)"-input-file", argc, argv)) > 0) strcpy(input_file, argv[i + 1]);
         else strcpy(input_file, (char *)"cooccurrence.shuf.bin");
         if ((i = find_arg((char *)"-checkpoint-every", argc, argv)) > 0) checkpoint_every = atoi(argv[i + 1]);
+        if ((i = find_arg((char *)"-filter_paths", argc, argv)) > 0) filter_paths = 1;
         
         vocab_size = 0;
         fid = fopen(vocab_file, "r");
@@ -442,5 +458,6 @@ int main(int argc, char **argv) {
     free(input_file);
     free(save_W_file);
     free(save_gradsq_file);
+    free(appeared_flags);
     return result;
 }

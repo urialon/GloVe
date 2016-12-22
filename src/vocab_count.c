@@ -163,7 +163,7 @@ int get_counts() {
     qsort(vocab, max_vocab, sizeof(VOCAB), CompareVocabTie); //After (possibly) truncating, sort (possibly again), breaking ties alphabetically
     
     for (i = 0; i < max_vocab; i++) {
-        if (vocab[i].count < min_count) { // If a minimum frequency cutoff exists, truncate vocabulary
+        if ((vocab[i].count < min_count) && (vocab[i].word[0] != '*')) { // If a minimum frequency cutoff exists, truncate vocabulary
             if (verbose > 0) fprintf(stderr, "Truncating vocabulary at min count %lld.\n",min_count);
             break;
         }
